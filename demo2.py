@@ -6,15 +6,23 @@ from model import FunASRNano
 from tools.utils import load_audio
 
 
+def _get_device():
+    if torch.cuda.is_available():
+        return "cuda:0"
+    try:
+        import torch_npu
+        if torch.npu.is_available():
+            return "npu:0"
+    except ImportError:
+        pass
+    if torch.backends.mps.is_available():
+        return "mps"
+    return "cpu"
+
+
 def main():
     model_dir = "FunAudioLLM/Fun-ASR-Nano-2512"
-    device = (
-        "cuda:0"
-        if torch.cuda.is_available()
-        else "mps"
-        if torch.backends.mps.is_available()
-        else "cpu"
-    )
+    device = _get_device()
     m, kwargs = FunASRNano.from_pretrained(model=model_dir, device=device)
     tokenizer = kwargs.get("tokenizer", None)
     m.eval()
